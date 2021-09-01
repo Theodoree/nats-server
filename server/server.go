@@ -1947,7 +1947,7 @@ func (s *Server) AcceptLoop(clr chan struct{}) {
 	}
 
 	hp := net.JoinHostPort(opts.Host, strconv.Itoa(opts.Port))
-	l, e := natsListen("tcp", hp)
+	l, e := natsListen("kcp", hp)
 	s.listenerErr = e
 	if e != nil {
 		s.mu.Unlock()

@@ -589,7 +589,7 @@ func (s *Server) startLeafNodeAcceptLoop() {
 		return
 	}
 	hp := net.JoinHostPort(opts.LeafNode.Host, strconv.Itoa(port))
-	l, e := natsListen("tcp", hp)
+	l, e := natsListen("kcp", hp)
 	s.leafNodeListenerErr = e
 	if e != nil {
 		s.mu.Unlock()
@@ -598,7 +598,7 @@ func (s *Server) startLeafNodeAcceptLoop() {
 	}
 
 	s.Noticef("Listening for leafnode connections on %s",
-		net.JoinHostPort(opts.LeafNode.Host, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.LeafNode.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
 
 	tlsRequired := opts.LeafNode.TLSConfig != nil
 	tlsVerify := tlsRequired && opts.LeafNode.TLSConfig.ClientAuth == tls.RequireAndVerifyClientCert

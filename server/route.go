@@ -1657,7 +1657,7 @@ func (s *Server) startRouteAcceptLoop() {
 	}
 
 	hp := net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(port))
-	l, e := natsListen("tcp", hp)
+	l, e := natsListen("kcp", hp)
 	s.routeListenerErr = e
 	if e != nil {
 		s.mu.Unlock()
@@ -1665,7 +1665,7 @@ func (s *Server) startRouteAcceptLoop() {
 		return
 	}
 	s.Noticef("Listening for route connections on %s",
-		net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
 
 	proto := RouteProtoV2
 	// For tests, we want to be able to make this server behave
@@ -1706,7 +1706,7 @@ func (s *Server) startRouteAcceptLoop() {
 	// If we have selected a random port...
 	if port == 0 {
 		// Write resolved port back to options.
-		opts.Cluster.Port = l.Addr().(*net.TCPAddr).Port
+		opts.Cluster.Port = l.Addr().(*net.UDPAddr).Port
 	}
 	// Check for Auth items
 	if opts.Cluster.Username != "" {

@@ -479,7 +479,7 @@ func (s *Server) startGatewayAcceptLoop() {
 		return
 	}
 	hp := net.JoinHostPort(opts.Gateway.Host, strconv.Itoa(port))
-	l, e := natsListen("tcp", hp)
+	l, e := natsListen("kcp", hp)
 	s.gatewayListenerErr = e
 	if e != nil {
 		s.mu.Unlock()
@@ -488,7 +488,7 @@ func (s *Server) startGatewayAcceptLoop() {
 	}
 	s.Noticef("Gateway name is %s", s.getGatewayName())
 	s.Noticef("Listening for gateways connections on %s",
-		net.JoinHostPort(opts.Gateway.Host, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.Gateway.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
 
 	tlsReq := opts.Gateway.TLSConfig != nil
 	authRequired := opts.Gateway.Username != ""

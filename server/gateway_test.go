@@ -164,6 +164,10 @@ func natsConnect(t testing.TB, url string, options ...nats.Option) *nats.Conn {
 			t.Fatalf("Error applying client option: %v", err)
 		}
 	}
+	options = append(options, func(options *nats.Options) error {
+		options.CustomDialer = BasicKcpService{}
+		return nil
+	})
 	nc, err := nats.Connect(url, options...)
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
