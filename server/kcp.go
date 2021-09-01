@@ -9,10 +9,15 @@ import (
 type BasicKcpService struct {
 }
 
-func (BasicKcpService) Dail(network string, raddr string) (net.Conn, error) {
+func (BasicKcpService) Dial(network, raddr string) (net.Conn, error){
 	switch network {
 	case "tcp", "kcp":
-		return kcp.Dial(raddr)
+		conn,err:= kcp.DialWithOptions(raddr,nil,10,3)
+		if err != nil {
+			return nil,err
+		}
+		_,_ = conn.Write([]byte(pingProto)) // make sure service accept
+		return conn,nil
 	default:
 		return net.Dial(network, raddr)
 	}
@@ -20,7 +25,7 @@ func (BasicKcpService) Dail(network string, raddr string) (net.Conn, error) {
 func (BasicKcpService) Listen(network string, addr string) (net.Listener, error) {
 	switch network {
 	case "tcp", "kcp":
-		return kcp.Listen(addr)
+		return kcp.ListenWithOptions(addr,nil,10,3)
 	default:
 		return natsListenConfig.Listen(context.Background(), network, addr)
 	}
