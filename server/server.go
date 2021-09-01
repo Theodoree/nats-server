@@ -1955,7 +1955,7 @@ func (s *Server) AcceptLoop(clr chan struct{}) {
 		return
 	}
 	s.Noticef("Listening for client connections on %s",
-		net.JoinHostPort(opts.Host, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
 
 	// Alert of TLS enabled.
 	if opts.TLSConfig != nil {
@@ -1966,7 +1966,7 @@ func (s *Server) AcceptLoop(clr chan struct{}) {
 	// to 0 at the beginning this function. So we need to get the actual port
 	if opts.Port == 0 {
 		// Write resolved port back to options.
-		opts.Port = l.Addr().(*net.TCPAddr).Port
+		opts.Port = l.Addr().(*net.UDPAddr).Port
 	}
 
 	// Now that port has been set (if it was set to RANDOM), set the
