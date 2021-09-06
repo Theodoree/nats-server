@@ -84,7 +84,7 @@ func RunServer(opts *Options) *Server {
 	go s.Start()
 
 	// Wait for accept loop(s) to be started
-	if err := s.readyForConnections(10 * time.Second); err != nil {
+	if err := s.readyForConnections(10000 * time.Second); err != nil {
 		panic(err)
 	}
 	return s
@@ -576,15 +576,15 @@ func TestRandomPorts(t *testing.T) {
 
 	defer s.Shutdown()
 
-	if s.Addr() == nil || s.Addr().(*net.TCPAddr).Port <= 0 {
+	if s.Addr().Port <= 0 {
 		t.Fatal("Should have dynamically assigned server port.")
 	}
 
-	if s.Addr() == nil || s.Addr().(*net.TCPAddr).Port == 4222 {
+	if  s.Addr().Port == 4222 {
 		t.Fatal("Should not have dynamically assigned default port: 4222.")
 	}
 
-	if s.MonitorAddr() == nil || s.MonitorAddr().Port <= 0 {
+	if  s.MonitorAddr().Port <= 0 {
 		t.Fatal("Should have dynamically assigned monitoring port.")
 	}
 
@@ -598,7 +598,7 @@ func TestNilMonitoringPort(t *testing.T) {
 
 	defer s.Shutdown()
 
-	if s.MonitorAddr() != nil {
+	if s.MonitorAddr().addr != nil {
 		t.Fatal("HttpAddr should be nil.")
 	}
 }
@@ -685,7 +685,7 @@ func TestProfilingNoTimeout(t *testing.T) {
 	defer s.Shutdown()
 
 	paddr := s.ProfilerAddr()
-	if paddr == nil {
+	if paddr.addr == nil {
 		t.Fatalf("Profiler not started")
 	}
 	pport := paddr.Port
@@ -1867,7 +1867,7 @@ func TestReconnectErrorReports(t *testing.T) {
 	opts.Cluster.Name = "A"
 	opts.Gateway.Name = "A"
 	opts.Gateway.Port = -1
-	remoteGWPort := cs.GatewayAddr().Port
+	remoteGWPort := getNetAddrPort(cs.GatewayAddr())
 	u, _ = url.Parse(fmt.Sprintf("nats://127.0.0.1:%d", remoteGWPort))
 	opts.Gateway.Gateways = []*RemoteGatewayOpts{
 		{

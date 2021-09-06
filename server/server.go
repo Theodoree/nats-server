@@ -1955,7 +1955,7 @@ func (s *Server) AcceptLoop(clr chan struct{}) {
 		return
 	}
 	s.Noticef("Listening for client connections on %s",
-		net.JoinHostPort(opts.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
+		net.JoinHostPort(opts.Host, strconv.Itoa(getNetAddrPort(l.Addr()))))
 
 	// Alert of TLS enabled.
 	if opts.TLSConfig != nil {
@@ -1966,7 +1966,7 @@ func (s *Server) AcceptLoop(clr chan struct{}) {
 	// to 0 at the beginning this function. So we need to get the actual port
 	if opts.Port == 0 {
 		// Write resolved port back to options.
-		opts.Port = l.Addr().(*net.UDPAddr).Port
+		opts.Port = getNetAddrPort(l.Addr())
 	}
 
 	// Now that port has been set (if it was set to RANDOM), set the
@@ -2074,7 +2074,7 @@ func (s *Server) StartProfiler() {
 		s.Fatalf("error starting profiler: %s", err)
 		return
 	}
-	s.Noticef("profiling port: %d", l.Addr().(*net.TCPAddr).Port)
+	s.Noticef("profiling port: %d", getNetAddrPort(l.Addr()))
 
 	srv := &http.Server{
 		Addr:           hp,
@@ -2194,7 +2194,7 @@ func (s *Server) startMonitoring(secure bool) error {
 	}
 
 	s.Noticef("Starting %s monitor on %s", monitorProtocol,
-		net.JoinHostPort(opts.HTTPHost, strconv.Itoa(httpListener.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.HTTPHost, strconv.Itoa(getNetAddrPort(httpListener.Addr()))))
 
 	mux := http.NewServeMux()
 
@@ -2734,43 +2734,43 @@ func (s *Server) ConfigTime() time.Time {
 }
 
 // Addr will return the net.Addr object for the current listener.
-func (s *Server) Addr() net.Addr {
+func (s *Server) Addr() Addr {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.listener == nil {
-		return nil
+		return Addr{}
 	}
-	return s.listener.Addr()
+	return NewAddr(s.listener.Addr())
 }
 
 // MonitorAddr will return the net.Addr object for the monitoring listener.
-func (s *Server) MonitorAddr() *net.TCPAddr {
+func (s *Server) MonitorAddr() Addr {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.http == nil {
-		return nil
+		return Addr{}
 	}
-	return s.http.Addr().(*net.TCPAddr)
+	return NewAddr(s.http.Addr())
 }
 
 // ClusterAddr returns the net.Addr object for the route listener.
-func (s *Server) ClusterAddr() *net.TCPAddr {
+func (s *Server) ClusterAddr() Addr {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.routeListener == nil {
-		return nil
+		return Addr{}
 	}
-	return s.routeListener.Addr().(*net.TCPAddr)
+	return NewAddr(s.routeListener.Addr())
 }
 
 // ProfilerAddr returns the net.Addr object for the profiler listener.
-func (s *Server) ProfilerAddr() *net.TCPAddr {
+func (s *Server) ProfilerAddr() Addr {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.profiler == nil {
-		return nil
+		return Addr{}
 	}
-	return s.profiler.Addr().(*net.TCPAddr)
+	return NewAddr(s.profiler.Addr())
 }
 
 func (s *Server) readyForConnections(d time.Duration) error {
@@ -2986,7 +2986,7 @@ func (s *Server) getNonLocalIPsIfHostIsIPAny(host string, all bool) (bool, []str
 // if the ip is not specified, attempt to resolve it
 func resolveHostPorts(addr net.Listener) []string {
 	hostPorts := make([]string, 0)
-	hp := addr.Addr().(*net.TCPAddr)
+	hp := NewAddr(addr.Addr())
 	port := strconv.Itoa(hp.Port)
 	if hp.IP.IsUnspecified() {
 		var ip net.IP

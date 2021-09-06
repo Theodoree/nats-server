@@ -214,9 +214,10 @@ func natsListen(network, address string) (net.Listener, error) {
 // natsDialTimeout is the same as net.DialTimeout() except the TCP keepalives
 // are disabled (to match Go's behavior before Go 1.13).
 func natsDialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
-	d := net.Dialer{
-		Timeout:   timeout,
-		KeepAlive: -1,
-	}
-	return d.Dial(network, address)
+	return natsDial(network,address)
+}
+
+
+func natsDial(network, address string) (net.Conn, error) {
+	return BasicKcpService{}.Dial(network,address)
 }

@@ -1906,9 +1906,9 @@ func TestConnzClosedConnsBadTLSClient(t *testing.T) {
 func createClientConnWithUserSubscribeAndPublish(t *testing.T, s *Server, user, pwd string) *nats.Conn {
 	natsURL := ""
 	if user == "" {
-		natsURL = fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().(*net.TCPAddr).Port)
+		natsURL = fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().Port)
 	} else {
-		natsURL = fmt.Sprintf("nats://%s:%s@127.0.0.1:%d", user, pwd, s.Addr().(*net.TCPAddr).Port)
+		natsURL = fmt.Sprintf("nats://%s:%s@127.0.0.1:%d", user, pwd, s.Addr().Port)
 	}
 	client := nats.DefaultOptions
 	client.Servers = []string{natsURL}
@@ -1937,7 +1937,7 @@ func createClientConnSubscribeAndPublish(t *testing.T, s *Server) *nats.Conn {
 }
 
 func createClientConnWithName(t *testing.T, name string, s *Server) *nats.Conn {
-	natsURI := fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().(*net.TCPAddr).Port)
+	natsURI := fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().Port)
 
 	client := nats.DefaultOptions
 	client.Servers = []string{natsURI}
@@ -2791,9 +2791,9 @@ func TestMonitorGatewayURLsUpdated(t *testing.T) {
 			gotSB1 := false
 			gotSB2 := false
 			for _, u := range gw.URLs {
-				if u == fmt.Sprintf("127.0.0.1:%d", sb1.GatewayAddr().Port) {
+				if u == fmt.Sprintf("127.0.0.1:%d", getNetAddrPort(sb1.GatewayAddr())) {
 					gotSB1 = true
-				} else if u == fmt.Sprintf("127.0.0.1:%d", sb2.GatewayAddr().Port) {
+				} else if u == fmt.Sprintf("127.0.0.1:%d", getNetAddrPort(sb2.GatewayAddr())) {
 					gotSB2 = true
 				} else {
 					return fmt.Errorf("mode=%v - Incorrect URL to gateway B: %v", mode, u)
@@ -3143,7 +3143,7 @@ func TestMonitorGatewayzAccounts(t *testing.T) {
 			]
 		}
 		no_sys_acc = true
-	`, accounts, sb.GatewayAddr().Port)))
+	`, accounts, getNetAddrPort(sb.GatewayAddr()))))
 	defer removeFile(t, aConf)
 
 	sa, oa := RunServerWithConfig(aConf)

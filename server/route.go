@@ -658,7 +658,7 @@ func (c *client) processRouteInfo(info *Info) {
 				c.mu.Lock()
 				switch conn := c.nc.(type) {
 				case *net.TCPConn, *tls.Conn:
-					addr := conn.RemoteAddr().(*net.TCPAddr)
+					addr := NewAddr(conn.RemoteAddr())
 					info.IP = fmt.Sprintf("nats-route://%s/", net.JoinHostPort(addr.IP.String(),
 						strconv.Itoa(info.Port)))
 				default:
@@ -1665,7 +1665,7 @@ func (s *Server) startRouteAcceptLoop() {
 		return
 	}
 	s.Noticef("Listening for route connections on %s",
-		net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
+		net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(getNetAddrPort(l.Addr()))))
 
 	proto := RouteProtoV2
 	// For tests, we want to be able to make this server behave
@@ -1790,7 +1790,7 @@ func (s *Server) setRouteInfoHostPortAndIP() error {
 // and will actively try to connect to listed routes.
 func (s *Server) StartRouting(clientListenReady chan struct{}) {
 	defer s.grWG.Done()
-
+	
 	// Wait for the client and and leafnode listen ports to be opened,
 	// and the possible ephemeral ports to be selected.
 	<-clientListenReady

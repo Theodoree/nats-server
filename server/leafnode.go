@@ -598,7 +598,7 @@ func (s *Server) startLeafNodeAcceptLoop() {
 	}
 
 	s.Noticef("Listening for leafnode connections on %s",
-		net.JoinHostPort(opts.LeafNode.Host, strconv.Itoa(l.Addr().(*net.UDPAddr).Port)))
+		net.JoinHostPort(opts.LeafNode.Host, strconv.Itoa(getNetAddrPort(l.Addr()))))
 
 	tlsRequired := opts.LeafNode.TLSConfig != nil
 	tlsVerify := tlsRequired && opts.LeafNode.TLSConfig.ClientAuth == tls.RequireAndVerifyClientCert
@@ -621,7 +621,7 @@ func (s *Server) startLeafNodeAcceptLoop() {
 	// If we have selected a random port...
 	if port == 0 {
 		// Write resolved port back to options.
-		opts.LeafNode.Port = l.Addr().(*net.TCPAddr).Port
+		opts.LeafNode.Port = getNetAddrPort(l.Addr())
 	}
 
 	s.leafNodeInfo = info

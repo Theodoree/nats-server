@@ -387,7 +387,7 @@ func TestTLSSeedSolicitWorks(t *testing.T) {
 	srvA := RunServer(optsA)
 	defer srvA.Shutdown()
 
-	urlA := fmt.Sprintf("nats://%s:%d/", optsA.Host, srvA.Addr().(*net.TCPAddr).Port)
+	urlA := fmt.Sprintf("nats://%s:%d/", optsA.Host, srvA.Addr().Port)
 
 	nc1, err := nats.Connect(urlA)
 	if err != nil {
@@ -406,7 +406,7 @@ func TestTLSSeedSolicitWorks(t *testing.T) {
 	srvB := RunServer(optsB)
 	defer srvB.Shutdown()
 
-	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().(*net.TCPAddr).Port)
+	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().Port)
 
 	nc2, err := nats.Connect(urlB)
 	if err != nil {
@@ -445,7 +445,7 @@ func TestChainedSolicitWorks(t *testing.T) {
 	srvA := RunServer(optsA)
 	defer srvA.Shutdown()
 
-	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvA.Addr().(*net.TCPAddr).Port)
+	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvA.Addr().Port)
 
 	nc1, err := nats.Connect(urlSeed)
 	if err != nil {
@@ -466,7 +466,7 @@ func TestChainedSolicitWorks(t *testing.T) {
 	srvB := RunServer(optsB)
 	defer srvB.Shutdown()
 
-	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().(*net.TCPAddr).Port)
+	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().Port)
 
 	nc2, err := nats.Connect(urlB)
 	if err != nil {
@@ -519,7 +519,7 @@ func TestTLSChainedSolicitWorks(t *testing.T) {
 	srvA := RunServer(optsA)
 	defer srvA.Shutdown()
 
-	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvSeed.Addr().(*net.TCPAddr).Port)
+	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvSeed.Addr().Port)
 
 	nc1, err := nats.Connect(urlSeed)
 	if err != nil {
@@ -543,7 +543,7 @@ func TestTLSChainedSolicitWorks(t *testing.T) {
 	checkClusterFormed(t, srvSeed, srvA, srvB)
 	checkExpectedSubs(t, 1, srvA, srvB)
 
-	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().(*net.TCPAddr).Port)
+	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().Port)
 
 	nc2, err := nats.Connect(urlB)
 	if err != nil {

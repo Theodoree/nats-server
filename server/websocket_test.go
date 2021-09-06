@@ -1623,7 +1623,7 @@ func (l *captureFatalLogger) Fatalf(format string, v ...interface{}) {
 
 func TestWSFailureToStartServer(t *testing.T) {
 	// Create a listener to use a port
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	l, err := natsListen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Error listening: %v", err)
 	}
@@ -1636,7 +1636,7 @@ func TestWSFailureToStartServer(t *testing.T) {
 	o.Gateway.Name = ""
 	o.Gateway.Port = 0
 	o.LeafNode.Port = 0
-	o.Websocket.Port = l.Addr().(*net.TCPAddr).Port
+	o.Websocket.Port = NewAddr(l.Addr()).Port
 	s, err := NewServer(o)
 	if err != nil {
 		t.Fatalf("Error creating server: %v", err)

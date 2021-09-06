@@ -164,10 +164,7 @@ func natsConnect(t testing.TB, url string, options ...nats.Option) *nats.Conn {
 			t.Fatalf("Error applying client option: %v", err)
 		}
 	}
-	options = append(options, func(options *nats.Options) error {
-		options.CustomDialer = BasicKcpService{}
-		return nil
-	})
+
 	nc, err := nats.Connect(url, options...)
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
@@ -275,7 +272,7 @@ func testGatewayOptionsFromToWithServers(t *testing.T, org, dst string, servers 
 	o := testDefaultOptionsForGateway(org)
 	gw := &RemoteGatewayOpts{Name: dst}
 	for _, s := range servers {
-		us := fmt.Sprintf("nats://127.0.0.1:%d", s.GatewayAddr().Port)
+		us := fmt.Sprintf("nats://127.0.0.1:%d", getNetAddrPort(s.GatewayAddr()))
 		u, err := url.Parse(us)
 		if err != nil {
 			t.Fatalf("Error parsing url: %v", err)
@@ -458,7 +455,7 @@ func TestGatewayHeaderInfo(t *testing.T) {
 	s := runGatewayServer(o)
 	defer s.Shutdown()
 
-	gwconn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", o.Gateway.Host, o.Gateway.Port))
+	gwconn, err := natsDial("tcp", fmt.Sprintf("%s:%d", o.Gateway.Host, o.Gateway.Port))
 	if err != nil {
 		t.Fatalf("Error dialing server: %v\n", err)
 	}
@@ -484,7 +481,7 @@ func TestGatewayHeaderInfo(t *testing.T) {
 	s = runGatewayServer(o)
 	defer s.Shutdown()
 
-	gwconn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", o.Gateway.Host, o.Gateway.Port))
+	gwconn, err = natsDial("tcp", fmt.Sprintf("%s:%d", o.Gateway.Host, o.Gateway.Port))
 	if err != nil {
 		t.Fatalf("Error dialing server: %v\n", err)
 	}
@@ -761,7 +758,7 @@ func TestGatewayListenError(t *testing.T) {
 	defer s2.Shutdown()
 
 	o1 := testDefaultOptionsForGateway("A")
-	o1.Gateway.Port = s2.GatewayAddr().Port
+	o1.Gateway.Port = getNetAddrPort(s2.GatewayAddr())
 	testFatalErrorOnStart(t, o1, "listening on")
 }
 
@@ -877,7 +874,7 @@ func TestGatewayAdvertise(t *testing.T) {
 
 	o1 := testGatewayOptionsFromToWithServers(t, "A", "B", s2)
 	// Set the advertise so that this points to C
-	o1.Gateway.Advertise = fmt.Sprintf("127.0.0.1:%d", s3.GatewayAddr().Port)
+	o1.Gateway.Advertise = fmt.Sprintf("127.0.0.1:%d", getNetAddrPort(s3.GatewayAddr()))
 	s1 := runGatewayServer(o1)
 	defer s1.Shutdown()
 
@@ -908,7 +905,7 @@ func TestGatewayAuth(t *testing.T) {
 	s2 := runGatewayServer(o2)
 	defer s2.Shutdown()
 
-	o1 := testGatewayOptionsFromToWithURLs(t, "A", "B", []string{fmt.Sprintf("nats://me:pwd@127.0.0.1:%d", s2.GatewayAddr().Port)})
+	o1 := testGatewayOptionsFromToWithURLs(t, "A", "B", []string{fmt.Sprintf("nats://me:pwd@127.0.0.1:%d",getNetAddrPort(s2.GatewayAddr()))})
 	s1 := runGatewayServer(o1)
 	defer s1.Shutdown()
 
@@ -950,7 +947,7 @@ func TestGatewayTLS(t *testing.T) {
 	s2 := runGatewayServer(o2)
 	defer s2.Shutdown()
 
-	o1 := testGatewayOptionsFromToWithTLS(t, "A", "B", []string{fmt.Sprintf("nats://127.0.0.1:%d", s2.GatewayAddr().Port)})
+	o1 := testGatewayOptionsFromToWithTLS(t, "A", "B", []string{fmt.Sprintf("nats://127.0.0.1:%d", getNetAddrPort(s2.GatewayAddr()))})
 	s1 := runGatewayServer(o1)
 	defer s1.Shutdown()
 
@@ -989,7 +986,7 @@ func TestGatewayTLS(t *testing.T) {
 	// Make an explicit TLS config for remote gateway config "B"
 	// on cluster A.
 	o1.Gateway.Gateways[0].TLSConfig = o1.Gateway.TLSConfig.Clone()
-	u, _ := url.Parse(fmt.Sprintf("tls://localhost:%d", s2.GatewayAddr().Port))
+	u, _ := url.Parse(fmt.Sprintf("tls://localhost:%d", getNetAddrPort(s2.GatewayAddr())))
 	o1.Gateway.Gateways[0].URLs = []*url.URL{u}
 	// Make the TLSTimeout so small that it should fail to connect.
 	smallTimeout := 0.00000001
@@ -1070,7 +1067,7 @@ func TestGatewayServerNameInTLSConfig(t *testing.T) {
 	s2 := runGatewayServer(o2)
 	defer s2.Shutdown()
 
-	o1 := testGatewayOptionsFromToWithTLS(t, "A", "B", []string{fmt.Sprintf("nats://127.0.0.1:%d", s2.GatewayAddr().Port)})
+	o1 := testGatewayOptionsFromToWithTLS(t, "A", "B", []string{fmt.Sprintf("nats://127.0.0.1:%d",getNetAddrPort(s2.GatewayAddr()))})
 	s1 := runGatewayServer(o1)
 	defer s1.Shutdown()
 
@@ -1123,7 +1120,7 @@ func TestGatewayConnectToWrongPort(t *testing.T) {
 	defer s2.Shutdown()
 
 	// Configure a gateway to "B", but connect to the wrong port
-	urls := []string{fmt.Sprintf("nats://127.0.0.1:%d", s2.Addr().(*net.TCPAddr).Port)}
+	urls := []string{fmt.Sprintf("nats://127.0.0.1:%d", s2.Addr().Port)}
 	o1 := testGatewayOptionsFromToWithURLs(t, "A", "B", urls)
 	s1 := runGatewayServer(o1)
 	defer s1.Shutdown()
@@ -1145,7 +1142,7 @@ func TestGatewayConnectToWrongPort(t *testing.T) {
 	s1.Shutdown()
 
 	// Now have a client connect to s2's gateway port.
-	nc, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", s2.GatewayAddr().Port))
+	nc, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", getNetAddrPort(s2.GatewayAddr())))
 	if err == nil {
 		nc.Close()
 		t.Fatal("Expected error, got none")
@@ -1280,7 +1277,7 @@ func TestGatewayImplicitReconnectRace(t *testing.T) {
 	// On sb, change the URL to sa1 so that it is a name, instead of an IP,
 	// so that we hit the slow resolver.
 	cfg := sb.getRemoteGateway("A")
-	cfg.updateURLs([]string{fmt.Sprintf("localhost:%d", sa1.GatewayAddr().Port)})
+	cfg.updateURLs([]string{fmt.Sprintf("localhost:%d", getNetAddrPort(sa1.GatewayAddr()))})
 
 	// Shutdown sa1 now...
 	sa1.Shutdown()
@@ -3120,7 +3117,7 @@ func TestGatewayRandomIP(t *testing.T) {
 	oa := testGatewayOptionsFromToWithURLs(t, "A", "B",
 		[]string{
 			"nats://noport",
-			fmt.Sprintf("nats://localhost:%d", sb.GatewayAddr().Port),
+			fmt.Sprintf("nats://localhost:%d", getNetAddrPort(sb.GatewayAddr())),
 		})
 	// Create a dummy resolver that returns error since we
 	// don't provide any IP. The code should then use the configured
@@ -5886,7 +5883,7 @@ func TestGatewaySingleOutbound(t *testing.T) {
 		t.Fatalf("Error on listen: %v", err)
 	}
 	defer l.Close()
-	port := l.Addr().(*net.TCPAddr).Port
+	port := NewAddr(l.Addr()).Port
 
 	oa := testGatewayOptionsFromToWithTLS(t, "A", "B", []string{fmt.Sprintf("nats://127.0.0.1:%d", port)})
 	oa.Gateway.TLSTimeout = 0.1
@@ -6105,7 +6102,7 @@ func TestGatewayCloseTLSConnection(t *testing.T) {
 	sa := runGatewayServer(oa)
 	defer sa.Shutdown()
 
-	ob1 := testGatewayOptionsFromToWithTLS(t, "B", "A", []string{fmt.Sprintf("nats://127.0.0.1:%d", sa.GatewayAddr().Port)})
+	ob1 := testGatewayOptionsFromToWithTLS(t, "B", "A", []string{fmt.Sprintf("nats://127.0.0.1:%d", getNetAddrPort(sa.GatewayAddr()))})
 	sb1 := runGatewayServer(ob1)
 	defer sb1.Shutdown()
 

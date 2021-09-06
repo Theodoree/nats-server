@@ -375,7 +375,7 @@ func (s *Server) startMQTT() {
 		return
 	}
 	if port == 0 {
-		o.Port = hl.Addr().(*net.TCPAddr).Port
+		o.Port = getNetAddrPort(hl.Addr())
 	}
 	s.mqtt.listener = hl
 	scheme := "mqtt"

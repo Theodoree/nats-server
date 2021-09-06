@@ -2012,7 +2012,7 @@ func (p *proxyAcceptDetectFailureLate) run(t *testing.T) int {
 	p.Lock()
 	p.l = l
 	p.Unlock()
-	port := l.Addr().(*net.TCPAddr).Port
+	port := NewAddr(l.Addr()).Port
 	p.wg.Add(1)
 	go func() {
 		defer p.wg.Done()
@@ -2987,7 +2987,7 @@ func TestLeafNodeWSFailedConnection(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	port := lst.Addr().(*net.TCPAddr).Port
+	port := NewAddr(lst.Addr()).Port
 	u, _ := url.Parse(fmt.Sprintf("ws://127.0.0.1:%d", port))
 	lo = DefaultOptions()
 	lo.LeafNode.Remotes = []*RemoteLeafOpts{{URLs: []*url.URL{u}}}

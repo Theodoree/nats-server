@@ -2765,9 +2765,15 @@ func TestAccountMultiWeightedRouteMappings(t *testing.T) {
 
 	total := 5000
 	for i := 0; i < total; i++ {
-		nc.Publish("foo", nil)
+		err:=nc.Publish("foo", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
-	nc.Flush()
+	err := nc.Flush()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, rd := range rds {
 		pending, _, _ := rd.sub.Pending()

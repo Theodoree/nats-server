@@ -793,12 +793,9 @@ func (s *Server) Routez(routezOpts *RoutezOptions) (*Routez, error) {
 			}
 		}
 
-		switch conn := r.nc.(type) {
-		case *net.TCPConn, *tls.Conn:
-			addr := conn.RemoteAddr().(*net.TCPAddr)
-			ri.Port = addr.Port
-			ri.IP = addr.IP.String()
-		}
+		addr:=NewAddr(r.nc.RemoteAddr())
+		ri.Port= addr.Port
+		ri.IP = addr.IP.String()
 		r.mu.Unlock()
 		rs.Routes = append(rs.Routes, ri)
 	}

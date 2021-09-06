@@ -7,10 +7,7 @@ import (
 )
 
 func TestBasicKcpService_Dail(t *testing.T) {
-	client,err:=nats.Connect(fmt.Sprintf("%s:%d", DEFAULT_HOST, DEFAULT_PORT), func(options *nats.Options) error {
-			options.CustomDialer = BasicKcpService{}
-			return nil
-	})
+	client,err:=nats.Connect(fmt.Sprintf("%s:%d", DEFAULT_HOST, DEFAULT_PORT), SetBasicKcpService)
 	if err != nil {
 		t.Fatal(err)
 	}
