@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -385,7 +384,7 @@ func TestConfigReloadRotateTLS(t *testing.T) {
 	defer server.Shutdown()
 
 	// Ensure we can connect as a sanity check.
-	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().(*net.TCPAddr).Port)
+	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().Port)
 
 	nc, err := nats.Connect(addr, nats.Secure(&tls.Config{InsecureSkipVerify: true}))
 	if err != nil {
@@ -440,7 +439,7 @@ func TestConfigReloadEnableTLS(t *testing.T) {
 	defer server.Shutdown()
 
 	// Ensure we can connect as a sanity check.
-	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().(*net.TCPAddr).Port)
+	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().Port)
 	nc, err := nats.Connect(addr)
 	if err != nil {
 		t.Fatalf("Error creating client: %v", err)
@@ -472,7 +471,7 @@ func TestConfigReloadDisableTLS(t *testing.T) {
 	defer server.Shutdown()
 
 	// Ensure we can connect as a sanity check.
-	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().(*net.TCPAddr).Port)
+	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().Port)
 	nc, err := nats.Connect(addr, nats.Secure(&tls.Config{InsecureSkipVerify: true}))
 	if err != nil {
 		t.Fatalf("Error creating client: %v", err)
@@ -1800,7 +1799,7 @@ func TestConfigReloadClientAdvertise(t *testing.T) {
 	defer removeFile(t, conf)
 	defer s.Shutdown()
 
-	orgPort := s.Addr().(*net.TCPAddr).Port
+	orgPort := s.Addr().Port
 
 	verify := func(expectedHost string, expectedPort int) {
 		s.mu.Lock()
@@ -1848,7 +1847,7 @@ func TestConfigReloadMaxConnections(t *testing.T) {
 	defer server.Shutdown()
 
 	// Make two connections.
-	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().(*net.TCPAddr).Port)
+	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().Port)
 	nc1, err := nats.Connect(addr)
 	if err != nil {
 		t.Fatalf("Error creating client: %v", err)
@@ -1902,7 +1901,7 @@ func TestConfigReloadMaxPayload(t *testing.T) {
 	defer removeFile(t, config)
 	defer server.Shutdown()
 
-	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().(*net.TCPAddr).Port)
+	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().Port)
 	nc, err := nats.Connect(addr)
 	if err != nil {
 		t.Fatalf("Error creating client: %v", err)
@@ -2125,7 +2124,7 @@ func TestConfigReloadClusterPerms(t *testing.T) {
 	checkClusterFormed(t, srva, srvb)
 
 	// Create a connection on A
-	nca, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srva.Addr().(*net.TCPAddr).Port))
+	nca, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srva.Addr().Port))
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -2141,7 +2140,7 @@ func TestConfigReloadClusterPerms(t *testing.T) {
 	}
 
 	// Connect on B and do the same
-	ncb, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srvb.Addr().(*net.TCPAddr).Port))
+	ncb, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srvb.Addr().Port))
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -2315,7 +2314,7 @@ func TestConfigReloadClusterPermsImport(t *testing.T) {
 	checkClusterFormed(t, srva, srvb)
 
 	// Create a connection on A
-	nca, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srva.Addr().(*net.TCPAddr).Port))
+	nca, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srva.Addr().Port))
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -2412,7 +2411,7 @@ func TestConfigReloadClusterPermsExport(t *testing.T) {
 	checkClusterFormed(t, srva, srvb)
 
 	// Create a connection on B
-	ncb, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srvb.Addr().(*net.TCPAddr).Port))
+	ncb, err := nats.Connect(fmt.Sprintf("nats://127.0.0.1:%d", srvb.Addr().Port))
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -3683,7 +3682,7 @@ func TestConfigReloadMaxControlLineWithClients(t *testing.T) {
 	defer server.Shutdown()
 
 	// Ensure we can connect as a sanity check.
-	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().(*net.TCPAddr).Port)
+	addr := fmt.Sprintf("nats://%s:%d", opts.Host, server.Addr().Port)
 	nc, err := nats.Connect(addr)
 	if err != nil {
 		t.Fatalf("Error creating client: %v", err)
@@ -3761,7 +3760,7 @@ func TestConfigReloadLeafNodeRandomPort(t *testing.T) {
 	defer s.Shutdown()
 
 	s.mu.Lock()
-	lnPortBefore := s.leafNodeListener.Addr().(*net.TCPAddr).Port
+	lnPortBefore := getNetAddrPort(s.leafNodeListener.Addr())
 	s.mu.Unlock()
 
 	if err := s.Reload(); err != nil {
@@ -3769,7 +3768,7 @@ func TestConfigReloadLeafNodeRandomPort(t *testing.T) {
 	}
 
 	s.mu.Lock()
-	lnPortAfter := s.leafNodeListener.Addr().(*net.TCPAddr).Port
+	lnPortAfter := getNetAddrPort(s.leafNodeListener.Addr())
 	s.mu.Unlock()
 
 	if lnPortBefore != lnPortAfter {

@@ -71,6 +71,23 @@ func RunServer(opts *Options) *Server {
 	if opts == nil {
 		opts = DefaultOptions()
 	}
+	if len(opts.Host) == 0 {
+		opts.Host = "127.0.0.1"
+	}
+
+	if (opts.Cluster.Port > 0 || len(opts.Cluster.Name) > 0) && len(opts.Cluster.Host) == 0 {
+		opts.Cluster.Host = "127.0.0.1"
+	}
+	if (opts.Gateway.Port > 0 || len(opts.Gateway.Name) > 0) && len(opts.Gateway.Host) == 0 {
+		opts.Gateway.Host = "127.0.0.1"
+	}
+	if opts.Websocket.Port > 0 && len(opts.Websocket.Host) == 0 {
+		opts.Websocket.Host = "127.0.0.1"
+	}
+	if opts.LeafNode.Port != 0 && len(opts.LeafNode.Host) == 0 {
+		opts.LeafNode.Host = "127.0.0.1"
+	}
+
 	s, err := NewServer(opts)
 	if err != nil || s == nil {
 		panic(fmt.Sprintf("No NATS Server object returned: %v", err))
@@ -263,7 +280,7 @@ func TestGetConnectURLs(t *testing.T) {
 			t.Fatalf("Expected to get a list of urls, got none for listen addr: %v", opts.Host)
 		}
 		for _, u := range urls {
-			tcpaddr, err := net.ResolveTCPAddr("tcp", u)
+			tcpaddr, err := ResolveAddr("tcp", u)
 			if err != nil {
 				t.Fatalf("Error resolving: %v", err)
 			}
@@ -300,7 +317,7 @@ func TestGetConnectURLs(t *testing.T) {
 		if len(urls) != 1 {
 			t.Fatalf("Expected one URL, got %v", urls)
 		}
-		tcpaddr, err := net.ResolveTCPAddr("tcp", urls[0])
+		tcpaddr, err := ResolveAddr("tcp", urls[0])
 		if err != nil {
 			t.Fatalf("Error resolving: %v", err)
 		}
@@ -576,15 +593,15 @@ func TestRandomPorts(t *testing.T) {
 
 	defer s.Shutdown()
 
-	if s.Addr() == nil || s.Addr().(*net.TCPAddr).Port <= 0 {
+	if s.Addr().Port <= 0 {
 		t.Fatal("Should have dynamically assigned server port.")
 	}
 
-	if s.Addr() == nil || s.Addr().(*net.TCPAddr).Port == 4222 {
+	if s.Addr().Port == 4222 {
 		t.Fatal("Should not have dynamically assigned default port: 4222.")
 	}
 
-	if s.MonitorAddr() == nil || s.MonitorAddr().Port <= 0 {
+	if s.MonitorAddr().Port <= 0 {
 		t.Fatal("Should have dynamically assigned monitoring port.")
 	}
 
@@ -598,7 +615,7 @@ func TestNilMonitoringPort(t *testing.T) {
 
 	defer s.Shutdown()
 
-	if s.MonitorAddr() != nil {
+	if s.MonitorAddr().addr != nil {
 		t.Fatal("HttpAddr should be nil.")
 	}
 }
@@ -685,7 +702,7 @@ func TestProfilingNoTimeout(t *testing.T) {
 	defer s.Shutdown()
 
 	paddr := s.ProfilerAddr()
-	if paddr == nil {
+	if paddr.addr == nil {
 		t.Fatalf("Profiler not started")
 	}
 	pport := paddr.Port
@@ -956,7 +973,7 @@ func TestLameDuckModeInfo(t *testing.T) {
 
 	curla := fmt.Sprintf("127.0.0.1:%d", optsA.Port)
 	wscurla := fmt.Sprintf("127.0.0.1:%d", optsA.Websocket.Port)
-	c, err := net.Dial("tcp", curla)
+	c, err := natsDialTimeout("udp", curla, 0)
 	if err != nil {
 		t.Fatalf("Error connecting: %v", err)
 	}

@@ -639,15 +639,15 @@ func (c *client) initClient() {
 
 // RemoteAddress expose the Address of the client connection,
 // nil when not connected or unknown
-func (c *client) RemoteAddress() net.Addr {
+func (c *client) RemoteAddress() Addr {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if c.nc == nil {
-		return nil
+		return Addr{}
 	}
 
-	return c.nc.RemoteAddr()
+	return NewAddr(c.nc.RemoteAddr())
 }
 
 // Helper function to report errors.

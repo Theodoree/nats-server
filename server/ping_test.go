@@ -16,7 +16,6 @@ package server
 import (
 	"bufio"
 	"fmt"
-	"net"
 	"testing"
 	"time"
 )
@@ -37,7 +36,7 @@ func TestPing(t *testing.T) {
 	s := RunServer(&o)
 	defer s.Shutdown()
 
-	c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", PING_CLIENT_PORT))
+	c, err := natsDial("tcp", fmt.Sprintf("127.0.0.1:%d", PING_CLIENT_PORT))
 	if err != nil {
 		t.Fatalf("Error connecting: %v", err)
 	}

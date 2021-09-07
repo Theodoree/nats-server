@@ -1636,7 +1636,7 @@ func TestWSFailureToStartServer(t *testing.T) {
 	o.Gateway.Name = ""
 	o.Gateway.Port = 0
 	o.LeafNode.Port = 0
-	o.Websocket.Port = l.Addr().(*net.TCPAddr).Port
+	o.Websocket.Port = getNetAddrPort(l.Addr())
 	s, err := NewServer(o)
 	if err != nil {
 		t.Fatalf("Error creating server: %v", err)
@@ -1710,7 +1710,7 @@ type testWSClientOptions struct {
 func testNewWSClient(t testing.TB, o testWSClientOptions) (net.Conn, *bufio.Reader, []byte) {
 	t.Helper()
 	addr := fmt.Sprintf("%s:%d", o.host, o.port)
-	wsc, err := net.Dial("tcp", addr)
+	wsc, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating ws connection: %v", err)
 	}
@@ -1994,7 +1994,7 @@ func TestWSTLSConnection(t *testing.T) {
 		{"client does not use TLS", false, http.StatusBadRequest},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			wsc, err := net.Dial("tcp", addr)
+			wsc, err := natsDial("tcp", addr)
 			if err != nil {
 				t.Fatalf("Error creating ws connection: %v", err)
 			}
@@ -2053,7 +2053,7 @@ func TestWSTLSVerifyClientCert(t *testing.T) {
 		{"client does not provide cert", false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			wsc, err := net.Dial("tcp", addr)
+			wsc, err := natsDial("tcp", addr)
 			if err != nil {
 				t.Fatalf("Error creating ws connection: %v", err)
 			}
@@ -2157,7 +2157,7 @@ func TestWSTLSVerifyAndMap(t *testing.T) {
 			defer s.Shutdown()
 
 			addr := fmt.Sprintf("%s:%d", o.Websocket.Host, o.Websocket.Port)
-			wsc, err := net.Dial("tcp", addr)
+			wsc, err := natsDial("tcp", addr)
 			if err != nil {
 				t.Fatalf("Error creating ws connection: %v", err)
 			}
@@ -2258,7 +2258,7 @@ func TestWSHandshakeTimeout(t *testing.T) {
 	s.SetLogger(logger, false, false)
 
 	addr := fmt.Sprintf("%s:%d", o.Websocket.Host, o.Websocket.Port)
-	wsc, err := net.Dial("tcp", addr)
+	wsc, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating ws connection: %v", err)
 	}
@@ -2295,7 +2295,7 @@ func TestWSServerReportUpgradeFailure(t *testing.T) {
 	req := testWSCreateValidReq()
 	req.URL, _ = url.Parse("wss://" + addr)
 
-	wsc, err := net.Dial("tcp", addr)
+	wsc, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating ws connection: %v", err)
 	}
@@ -3711,7 +3711,7 @@ func TestWSReloadTLSConfig(t *testing.T) {
 	defer s.Shutdown()
 
 	addr := fmt.Sprintf("127.0.0.1:%d", o.Websocket.Port)
-	wsc, err := net.Dial("tcp", addr)
+	wsc, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating ws connection: %v", err)
 	}
@@ -3735,7 +3735,7 @@ func TestWSReloadTLSConfig(t *testing.T) {
 		"../test/configs/certs/server-cert.pem",
 		"../test/configs/certs/server-key.pem"))
 
-	wsc, err = net.Dial("tcp", addr)
+	wsc, err = natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating ws connection: %v", err)
 	}

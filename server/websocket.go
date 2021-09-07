@@ -1055,7 +1055,7 @@ func (s *Server) startWebsocketServer() {
 		return
 	}
 	if port == 0 {
-		o.Port = hl.Addr().(*net.TCPAddr).Port
+		o.Port = getNetAddrPort(hl.Addr())
 	}
 	s.Noticef("Listening for websocket clients on %s://%s:%d", proto, o.Host, o.Port)
 	if proto == wsSchemePrefix {

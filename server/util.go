@@ -14,7 +14,6 @@
 package server
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -206,18 +205,34 @@ var natsListenConfig = &net.ListenConfig{
 	KeepAlive: -1,
 }
 
+
+var _listen func(network, address string) (net.Listener, error)
+var _dialTimeout func(network, address string, timeout time.Duration) (net.Conn, error)
+func init(){
+	_listen = BasicQuicService{}.Listen
+	_dialTimeout = BasicQuicService{}.DialTimeout
+
+	//_listen = BasicKcpService{}.Listen
+	//_dialTimeout = BasicKcpService{}.DialTimeout
+}
+
+
+
 // natsListen() is the same as net.Listen() except that TCP keepalives are
 // disabled (to match Go's behavior before Go 1.13).
 func natsListen(network, address string) (net.Listener, error) {
-	return natsListenConfig.Listen(context.Background(), network, address)
+	return _listen(network,address)
 }
 
 // natsDialTimeout is the same as net.DialTimeout() except the TCP keepalives
 // are disabled (to match Go's behavior before Go 1.13).
 func natsDialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
-	d := net.Dialer{
-		Timeout:   timeout,
-		KeepAlive: -1,
-	}
-	return d.Dial(network, address)
+	return _dialTimeout(network,address,timeout)
+
+}
+
+
+func natsDial(network, address string) (net.Conn, error) {
+	return natsDialTimeout(network,address,0)
+
 }

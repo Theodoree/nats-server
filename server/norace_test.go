@@ -210,7 +210,7 @@ func TestNoRaceClosedSlowConsumerWriteDeadline(t *testing.T) {
 	s := RunServer(opts)
 	defer s.Shutdown()
 
-	c, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
+	c, err := natsDialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -258,7 +258,7 @@ func TestNoRaceClosedSlowConsumerPendingBytes(t *testing.T) {
 	s := RunServer(opts)
 	defer s.Shutdown()
 
-	c, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
+	c, err := natsDialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -306,7 +306,7 @@ func TestNoRaceSlowConsumerPendingBytes(t *testing.T) {
 	s := RunServer(opts)
 	defer s.Shutdown()
 
-	c, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
+	c, err := natsDialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -835,7 +835,7 @@ func TestNoRaceWriteDeadline(t *testing.T) {
 	s := RunServer(opts)
 	defer s.Shutdown()
 
-	c, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
+	c, err := natsDialTimeout("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port), 3*time.Second)
 	if err != nil {
 		t.Fatalf("Error on connect: %v", err)
 	}
@@ -1032,7 +1032,7 @@ func TestNoRaceAcceptLoopsDoNotLeaveOpenedConn(t *testing.T) {
 				defer wg.Done()
 				// Have an upper limit
 				for i := 0; i < 200; i++ {
-					c, err := net.Dial("tcp", url)
+					c, err := natsDial("tcp", url)
 					if err != nil {
 						return
 					}
