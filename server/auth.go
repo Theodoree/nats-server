@@ -21,7 +21,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"net"
 	"net/url"
 	"regexp"
 	"strings"
@@ -49,7 +48,7 @@ type ClientAuthentication interface {
 	// Optionally map a user after auth.
 	RegisterUser(*User)
 	// RemoteAddress expose the connection information of the client
-	RemoteAddress() net.Addr
+	RemoteAddress() Addr
 	// Kind indicates what type of connection this is matching defined constants like CLIENT, ROUTER, GATEWAY, LEAF etc
 	Kind() int
 }

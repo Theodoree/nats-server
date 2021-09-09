@@ -15,7 +15,6 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"strings"
 	"testing"
 	"time"
@@ -120,7 +119,7 @@ func TestClosedConnsSubsAccounting(t *testing.T) {
 	nc.Flush()
 	nc.Close()
 
-	checkClosedConns(t, s, 1, 20*time.Millisecond)
+	checkClosedConns(t, s, 1, 200*time.Millisecond)
 	conns := s.closedClients()
 	if lc := len(conns); lc != 1 {
 		t.Fatalf("len(conns) expected to be 1, got %d\n", lc)
@@ -146,7 +145,7 @@ func TestClosedAuthorizationTimeout(t *testing.T) {
 	s := RunServer(serverOptions)
 	defer s.Shutdown()
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", serverOptions.Host, serverOptions.Port))
+	conn, err := natsDial("tcp", fmt.Sprintf("%s:%d", serverOptions.Host, serverOptions.Port))
 	if err != nil {
 		t.Fatalf("Error dialing server: %v\n", err)
 	}
@@ -225,7 +224,7 @@ func TestClosedMaxPayload(t *testing.T) {
 	opts := s.getOpts()
 	endpoint := fmt.Sprintf("%s:%d", opts.Host, opts.Port)
 
-	conn, err := net.DialTimeout("tcp", endpoint, time.Second)
+	conn, err := natsDialTimeout("tcp", endpoint, time.Second)
 	if err != nil {
 		t.Fatalf("Could not make a raw connection to the server: %v", err)
 	}

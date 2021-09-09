@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -1826,7 +1825,7 @@ func TestConnzClosedConnsBadClient(t *testing.T) {
 
 	opts := s.getOpts()
 
-	rc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port))
+	rc, err :=nats.Connect(fmt.Sprintf("%s:%d", opts.Host, opts.Port))
 	if err != nil {
 		t.Fatalf("Error on dial: %v", err)
 	}
@@ -1875,7 +1874,7 @@ func TestConnzClosedConnsBadTLSClient(t *testing.T) {
 
 	opts = s.getOpts()
 
-	rc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port))
+	rc, err := natsDial("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port))
 	if err != nil {
 		t.Fatalf("Error on dial: %v", err)
 	}
@@ -1907,13 +1906,11 @@ func TestConnzClosedConnsBadTLSClient(t *testing.T) {
 func createClientConnWithUserSubscribeAndPublish(t *testing.T, s *Server, user, pwd string) *nats.Conn {
 	natsURL := ""
 	if user == "" {
-		natsURL = fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().(*net.TCPAddr).Port)
+		natsURL = fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().Port)
 	} else {
-		natsURL = fmt.Sprintf("nats://%s:%s@127.0.0.1:%d", user, pwd, s.Addr().(*net.TCPAddr).Port)
+		natsURL = fmt.Sprintf("nats://%s:%s@127.0.0.1:%d", user, pwd, s.Addr().Port)
 	}
-	client := nats.DefaultOptions
-	client.Servers = []string{natsURL}
-	nc, err := client.Connect()
+	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		t.Fatalf("Error creating client: %v to: %s\n", err, natsURL)
 	}
@@ -1938,12 +1935,8 @@ func createClientConnSubscribeAndPublish(t *testing.T, s *Server) *nats.Conn {
 }
 
 func createClientConnWithName(t *testing.T, name string, s *Server) *nats.Conn {
-	natsURI := fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().(*net.TCPAddr).Port)
-
-	client := nats.DefaultOptions
-	client.Servers = []string{natsURI}
-	client.Name = name
-	nc, err := client.Connect()
+	natsURI := fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().Port)
+	nc, err := nats.Connect(natsURI,nats.Name(name))
 	if err != nil {
 		t.Fatalf("Error creating client: %v\n", err)
 	}
@@ -2085,7 +2078,7 @@ func TestConnzTLSInHandshake(t *testing.T) {
 	defer s.Shutdown()
 
 	// Create bare TCP connection to delay client TLS handshake
-	c, err := net.Dial("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port))
+	c, err := natsDial("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port))
 	if err != nil {
 		t.Fatalf("Error on dial: %v", err)
 	}

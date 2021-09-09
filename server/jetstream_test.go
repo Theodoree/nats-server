@@ -7065,7 +7065,7 @@ func TestJetStreamSimpleFileRecovery(t *testing.T) {
 	// Shutdown and restart and make sure things come back.
 	s.Shutdown()
 
-	checkFor(t, 2*time.Second, 200*time.Millisecond, func() error {
+	checkFor(t, 10*time.Second, 200*time.Millisecond, func() error {
 		delta := (runtime.NumGoroutine() - base)
 		if delta > 3 {
 			return fmt.Errorf("%d Go routines still exist post Shutdown()", delta)
@@ -10794,6 +10794,7 @@ func TestJetStreamServerReload(t *testing.T) {
 
 func TestJetStreamConfigReloadWithGlobalAccount(t *testing.T) {
 	template := `
+		host: 127.0.0.1
 		authorization {
 			users [
 				{user: anonymous}

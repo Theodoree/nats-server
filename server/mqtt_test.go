@@ -510,7 +510,7 @@ func TestMQTTStart(t *testing.T) {
 	s := testMQTTRunServer(t, o)
 	defer testMQTTShutdownServer(s)
 
-	nc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+	nc, err := natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 	if err != nil {
 		t.Fatalf("Unable to create tcp connection to mqtt port: %v", err)
 	}
@@ -525,6 +525,7 @@ func TestMQTTStart(t *testing.T) {
 	}
 	defer s2.Shutdown()
 	l := &captureFatalLogger{fatalCh: make(chan string, 1)}
+
 	s2.SetLogger(l, false, false)
 
 	wg := sync.WaitGroup{}
@@ -549,7 +550,7 @@ func TestMQTTTLS(t *testing.T) {
 	s := testMQTTRunServer(t, o)
 	defer testMQTTShutdownServer(s)
 
-	nc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+	nc, err := natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 	if err != nil {
 		t.Fatalf("Unable to create tcp connection to mqtt port: %v", err)
 	}
@@ -573,7 +574,7 @@ func TestMQTTTLS(t *testing.T) {
 	s = testMQTTRunServer(t, o)
 	defer testMQTTShutdownServer(s)
 
-	nc, err = net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+	nc, err = natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 	if err != nil {
 		t.Fatalf("Unable to create tcp connection to mqtt port: %v", err)
 	}
@@ -592,7 +593,7 @@ func TestMQTTTLS(t *testing.T) {
 	nc.Close()
 
 	// Add client cert.
-	nc, err = net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+	nc, err = natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 	if err != nil {
 		t.Fatalf("Unable to create tcp connection to mqtt port: %v", err)
 	}
@@ -620,7 +621,7 @@ func TestMQTTTLS(t *testing.T) {
 	s = testMQTTRunServer(t, o)
 	defer testMQTTShutdownServer(s)
 
-	nc, err = net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+	nc, err = natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 	if err != nil {
 		t.Fatalf("Unable to create tcp connection to mqtt port: %v", err)
 	}
@@ -704,7 +705,7 @@ func testMQTTConnectRetry(t testing.TB, ci *mqttConnInfo, host string, port int,
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 RETRY:
-	c, err := net.Dial("tcp", addr)
+	c, err := natsDial("tcp", addr)
 	if err != nil {
 		if retry(c) {
 			goto RETRY
@@ -839,7 +840,7 @@ func TestMQTTRequiresJSEnabled(t *testing.T) {
 	defer testMQTTShutdownServer(s)
 
 	addr := fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port)
-	c, err := net.Dial("tcp", addr)
+	c, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating mqtt connection: %v", err)
 	}
@@ -913,7 +914,7 @@ func TestMQTTTLSVerifyAndMap(t *testing.T) {
 			testMQTTEnableJSForAccount(t, s, accName)
 
 			addr := fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port)
-			mc, err := net.Dial("tcp", addr)
+			mc, err := natsDial("tcp", addr)
 			if err != nil {
 				t.Fatalf("Error creating ws connection: %v", err)
 			}
@@ -1104,7 +1105,7 @@ func TestMQTTAuthTimeout(t *testing.T) {
 			s := testMQTTRunServer(t, o)
 			defer testMQTTShutdownServer(s)
 
-			mc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+			mc, err := natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 			if err != nil {
 				t.Fatalf("Error connecting: %v", err)
 			}
@@ -1461,7 +1462,7 @@ func TestMQTTConnectNotFirstPacket(t *testing.T) {
 	l := &captureErrorLogger{errCh: make(chan string, 10)}
 	s.SetLogger(l, false, false)
 
-	c, err := net.Dial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
+	c, err := natsDial("tcp", fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port))
 	if err != nil {
 		t.Fatalf("Error on dial: %v", err)
 	}
@@ -1553,7 +1554,7 @@ func TestMQTTConnectFailsOnParse(t *testing.T) {
 	defer testMQTTShutdownServer(s)
 
 	addr := fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port)
-	c, err := net.Dial("tcp", addr)
+	c, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating mqtt connection: %v", err)
 	}
@@ -4222,7 +4223,7 @@ func TestMQTTFlappingSession(t *testing.T) {
 	// Now try to reconnect "c" and we should fail. We have to do this manually,
 	// since we expect it to fail.
 	addr := fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port)
-	c, err := net.Dial("tcp", addr)
+	c, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating mqtt connection: %v", err)
 	}
@@ -4283,7 +4284,7 @@ func TestMQTTLockedSession(t *testing.T) {
 	// Now try to connect another client that wants to use "sub".
 	// We can't use testMQTTConnect() because it is going to fail.
 	addr := fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port)
-	c2, err := net.Dial("tcp", addr)
+	c2, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating mqtt connection: %v", err)
 	}
@@ -4934,7 +4935,7 @@ func TestMQTTWebsocketNotSupported(t *testing.T) {
 	s.SetLogger(l, false, false)
 
 	addr := fmt.Sprintf("%s:%d", o.MQTT.Host, o.MQTT.Port)
-	wsc, err := net.Dial("tcp", addr)
+	wsc, err := natsDial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Error creating connection: %v", err)
 	}

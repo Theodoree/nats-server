@@ -488,7 +488,7 @@ func (s *Server) startGatewayAcceptLoop() {
 	}
 	s.Noticef("Gateway name is %s", s.getGatewayName())
 	s.Noticef("Listening for gateways connections on %s",
-		net.JoinHostPort(opts.Gateway.Host, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.Gateway.Host, strconv.Itoa(getNetAddrPort(l.Addr()))))
 
 	tlsReq := opts.Gateway.TLSConfig != nil
 	authRequired := opts.Gateway.Username != ""
@@ -507,7 +507,7 @@ func (s *Server) startGatewayAcceptLoop() {
 	// If we have selected a random port...
 	if port == 0 {
 		// Write resolved port back to options.
-		opts.Gateway.Port = l.Addr().(*net.TCPAddr).Port
+		opts.Gateway.Port = getNetAddrPort(l.Addr())
 	}
 	// Possibly override Host/Port based on Gateway.Advertise
 	if err := s.setGatewayInfoHostPort(info, opts); err != nil {
@@ -1720,13 +1720,13 @@ func (s *Server) removeRemoteGatewayConnection(c *client) {
 }
 
 // GatewayAddr returns the net.Addr object for the gateway listener.
-func (s *Server) GatewayAddr() *net.TCPAddr {
+func (s *Server) GatewayAddr() Addr {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.gatewayListener == nil {
-		return nil
+		return Addr{}
 	}
-	return s.gatewayListener.Addr().(*net.TCPAddr)
+	return NewAddr(s.gatewayListener.Addr())
 }
 
 // A- protocol received from the remote after sending messages

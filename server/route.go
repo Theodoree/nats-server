@@ -656,12 +656,11 @@ func (c *client) processRouteInfo(info *Info) {
 			if info.IP == "" {
 				// Need to get the remote IP address.
 				c.mu.Lock()
-				switch conn := c.nc.(type) {
-				case *net.TCPConn, *tls.Conn:
-					addr := conn.RemoteAddr().(*net.TCPAddr)
+				addr:=NewAddr(c.nc.RemoteAddr())
+				if len(addr.IP) > 0 {
 					info.IP = fmt.Sprintf("nats-route://%s/", net.JoinHostPort(addr.IP.String(),
 						strconv.Itoa(info.Port)))
-				default:
+				}else{
 					info.IP = c.route.url.String()
 				}
 				c.mu.Unlock()
@@ -1665,7 +1664,7 @@ func (s *Server) startRouteAcceptLoop() {
 		return
 	}
 	s.Noticef("Listening for route connections on %s",
-		net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)))
+		net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(getNetAddrPort(l.Addr()))))
 
 	proto := RouteProtoV2
 	// For tests, we want to be able to make this server behave
@@ -1706,7 +1705,7 @@ func (s *Server) startRouteAcceptLoop() {
 	// If we have selected a random port...
 	if port == 0 {
 		// Write resolved port back to options.
-		opts.Cluster.Port = l.Addr().(*net.TCPAddr).Port
+		opts.Cluster.Port = getNetAddrPort(l.Addr())
 	}
 	// Check for Auth items
 	if opts.Cluster.Username != "" {

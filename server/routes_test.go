@@ -387,7 +387,7 @@ func TestTLSSeedSolicitWorks(t *testing.T) {
 	srvA := RunServer(optsA)
 	defer srvA.Shutdown()
 
-	urlA := fmt.Sprintf("nats://%s:%d/", optsA.Host, srvA.Addr().(*net.TCPAddr).Port)
+	urlA := fmt.Sprintf("nats://%s:%d/", optsA.Host, srvA.Addr().Port)
 
 	nc1, err := nats.Connect(urlA)
 	if err != nil {
@@ -406,7 +406,7 @@ func TestTLSSeedSolicitWorks(t *testing.T) {
 	srvB := RunServer(optsB)
 	defer srvB.Shutdown()
 
-	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().(*net.TCPAddr).Port)
+	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().Port)
 
 	nc2, err := nats.Connect(urlB)
 	if err != nil {
@@ -445,7 +445,7 @@ func TestChainedSolicitWorks(t *testing.T) {
 	srvA := RunServer(optsA)
 	defer srvA.Shutdown()
 
-	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvA.Addr().(*net.TCPAddr).Port)
+	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvA.Addr().Port)
 
 	nc1, err := nats.Connect(urlSeed)
 	if err != nil {
@@ -466,7 +466,7 @@ func TestChainedSolicitWorks(t *testing.T) {
 	srvB := RunServer(optsB)
 	defer srvB.Shutdown()
 
-	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().(*net.TCPAddr).Port)
+	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().Port)
 
 	nc2, err := nats.Connect(urlB)
 	if err != nil {
@@ -519,7 +519,7 @@ func TestTLSChainedSolicitWorks(t *testing.T) {
 	srvA := RunServer(optsA)
 	defer srvA.Shutdown()
 
-	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvSeed.Addr().(*net.TCPAddr).Port)
+	urlSeed := fmt.Sprintf("nats://%s:%d/", optsSeed.Host, srvSeed.Addr().Port)
 
 	nc1, err := nats.Connect(urlSeed)
 	if err != nil {
@@ -543,7 +543,7 @@ func TestTLSChainedSolicitWorks(t *testing.T) {
 	checkClusterFormed(t, srvSeed, srvA, srvB)
 	checkExpectedSubs(t, 1, srvA, srvB)
 
-	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().(*net.TCPAddr).Port)
+	urlB := fmt.Sprintf("nats://%s:%d/", optsB.Host, srvB.Addr().Port)
 
 	nc2, err := nats.Connect(urlB)
 	if err != nil {
@@ -613,7 +613,7 @@ func TestRouteUseIPv6(t *testing.T) {
 	// Regardless, cannot have this test fail simply because IPv6 is disabled
 	// on the host.
 	hp := net.JoinHostPort(opts.Cluster.Host, strconv.Itoa(opts.Cluster.Port))
-	_, err := net.ResolveTCPAddr("tcp", hp)
+	_, err := ResolveAddr("tcp", hp)
 	if err != nil {
 		t.Skipf("Skipping this test since there is no IPv6 support on this host: %v", err)
 	}
@@ -626,10 +626,10 @@ func TestRouteUseIPv6(t *testing.T) {
 	for time.Now().Before(timeout) && !routeUp {
 		// We know that the server is local and listening to
 		// all IPv6 interfaces. Try connect using IPv6 loopback.
-		if conn, err := net.Dial("tcp", "[::1]:6222"); err != nil {
+		if conn, err := natsDial("tcp", "[::1]:6222"); err != nil {
 			// Travis seem to have the server actually listening to 0.0.0.0,
 			// so try with 127.0.0.1
-			if conn, err := net.Dial("tcp", "127.0.0.1:6222"); err != nil {
+			if conn, err := natsDial("tcp", "127.0.0.1:6222"); err != nil {
 				time.Sleep(time.Second)
 				continue
 			} else {
@@ -1222,7 +1222,7 @@ func TestRouteCloseTLSConnection(t *testing.T) {
 	defer s.Shutdown()
 
 	endpoint := fmt.Sprintf("%s:%d", opts.Cluster.Host, opts.Cluster.Port)
-	conn, err := net.DialTimeout("tcp", endpoint, 2*time.Second)
+	conn, err := natsDialTimeout("tcp", endpoint, 2*time.Second)
 	if err != nil {
 		t.Fatalf("Unexpected error on dial: %v", err)
 	}
