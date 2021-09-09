@@ -2,10 +2,10 @@ package server
 
 import (
 	"context"
-	"github.com/nats-io/nats.go"
 	"github.com/xtaci/kcp-go"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -13,18 +13,13 @@ import (
 type BasicKcpService struct {
 }
 
-
-func SetBasicKcpService(options *nats.Options) error {
-	options.CustomDialer = BasicKcpService{}
-	return nil
-}
-
-func (b BasicKcpService) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error){
-	return b.Dial(network,address)
+func (b BasicKcpService) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
+	return b.Dial(network, address)
 }
 func (b BasicKcpService) Dial(network, raddr string) (net.Conn, error) {
 	switch network {
-	case "tcp", "kcp":
+	case "tcp", "kcp", "udp":
+		raddr = strings.Replace(raddr, "0.0.0.0", "127.0.0.1", -1)
 		conn, err := kcp.DialWithOptions(raddr, nil, 10, 3)
 		if err != nil {
 			return nil, err
@@ -37,7 +32,7 @@ func (b BasicKcpService) Dial(network, raddr string) (net.Conn, error) {
 }
 func (b BasicKcpService) Listen(network string, addr string) (net.Listener, error) {
 	switch network {
-	case "tcp", "kcp":
+	case "tcp", "kcp", "udp":
 		l, err := kcp.ListenWithOptions(addr, nil, 10, 3)
 		if err != nil {
 			return nil, err
@@ -51,6 +46,7 @@ func (b BasicKcpService) Listen(network string, addr string) (net.Listener, erro
 type _kcp_listener struct {
 	net.Listener
 }
+
 func (l _kcp_listener) Accept() (net.Conn, error) {
 	conn, err := l.Listener.Accept()
 	if err != nil {
@@ -74,7 +70,6 @@ func (l _kcp_listener) Accept() (net.Conn, error) {
 	return _newKcpConn(conn), nil
 }
 
-
 const closeAction = 'c'
 const heartbeat = 'h'
 
@@ -89,40 +84,36 @@ type _KcpConn struct {
 
 // 我只确保,调用前不会超时
 func (s *_KcpConn) Read(buf []byte) (int, error) {
-	if !s.rd.IsZero(){
-		if time.Now().After(s.rd){
-			return 0,_timeoutError{
+	if !s.rd.IsZero() {
+		if time.Now().After(s.rd) {
+			return 0, _timeoutError{
 				"读取超时",
 			}
 		}
 	}
-
-	for {
-		count, err := s.Conn.Read(buf[:])
-		if err != nil  {
-			return 0, io.EOF
-		}
-		if count >= 2 {
-			switch {
-			case buf[0] == magicNumber:
-				switch buf[1] {
-				case closeAction:
-					return 0, io.EOF
-				}
-			default:
-				return count, nil
-			}
-		}
-
-		return count,nil
+	count, err := s.Conn.Read(buf[:])
+	if err != nil {
+		return 0, err
 	}
+	if count >= 2 {
+		switch {
+		case buf[0] == magicNumber:
+			switch buf[1] {
+			case closeAction:
+				return 0, io.EOF
+			}
+		default:
+			return count, nil
+		}
+	}
+	return count, nil
 }
 
 // 我只确保,调用前不会超时
-func (s *_KcpConn) Write(buf []byte) (int,error){
-	if !s.wd.IsZero(){
-		if time.Now().After(s.wd){
-			return 0,_timeoutError{
+func (s *_KcpConn) Write(buf []byte) (int, error) {
+	if !s.wd.IsZero() {
+		if time.Now().After(s.wd) {
+			return 0, _timeoutError{
 				"写入超时",
 			}
 		}
@@ -130,35 +121,34 @@ func (s *_KcpConn) Write(buf []byte) (int,error){
 	return s.Conn.Write(buf)
 }
 func (s *_KcpConn) SetDeadline(t time.Time) error {
-	err:=s.Conn.SetDeadline(t)
+	err := s.Conn.SetDeadline(t)
 	if err == nil {
 		s.rd = t
 		s.wd = t
 	}
 	return err
 }
-func (s *_KcpConn) SetReadDeadline(t time.Time) error{
-	err:=s.Conn.SetReadDeadline(t)
+func (s *_KcpConn) SetReadDeadline(t time.Time) error {
+	err := s.Conn.SetReadDeadline(t)
 	if err == nil {
 		s.rd = t
 	}
 	return err
 
-
 }
-func (s *_KcpConn) SetWriteDeadline(t time.Time) error{
-	err:=s.Conn.SetWriteDeadline(t)
+func (s *_KcpConn) SetWriteDeadline(t time.Time) error {
+	err := s.Conn.SetWriteDeadline(t)
 	if err == nil {
 		s.wd = t
 	}
 	return err
 }
 func (s *_KcpConn) Close() error {
-	var  buf [128]byte
+	var buf [128]byte
 	buf[0] = magicNumber
 	buf[1] = closeAction
 	_, _ = s.Write(buf[:])
-	time.Sleep(time.Millisecond*300) // 确保写完
+	time.Sleep(time.Millisecond * 300) // 确保写完
 	return s.Conn.Close()
 }
 

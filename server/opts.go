@@ -4318,6 +4318,8 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 	fs.StringVar(&opts.StoreDir, "sd", "", "Storage directory.")
 	fs.StringVar(&opts.StoreDir, "store_dir", "", "Storage directory.")
 
+	fs.String("protocol","","")
+
 	// The flags definition above set "default" values to some of the options.
 	// Calling Parse() here will override the default options with any value
 	// specified from the command line. This is ok. We will then update the

@@ -4626,6 +4626,7 @@ type qsub struct {
 }
 
 func (c *client) closeConnection(reason ClosedState) {
+	time.Sleep(time.Millisecond*20) // 确保udp情况下,对端接受到error,sendErr之后可能会close Conn
 	c.mu.Lock()
 	if c.flags.isSet(closeConnection) {
 		c.mu.Unlock()

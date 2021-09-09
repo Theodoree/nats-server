@@ -14,8 +14,10 @@
 package server
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/nats-io/nats.go"
 	"math"
 	"net"
 	"net/url"
@@ -205,34 +207,70 @@ var natsListenConfig = &net.ListenConfig{
 	KeepAlive: -1,
 }
 
+var _listen func(network, address string, tlsConfig *tls.Config) (net.Listener, error)
+var _dial func(network, address string, tlsConfig *tls.Config, timeout time.Duration) (net.Conn, error)
+var _customDialer nats.CustomDialer
 
-var _listen func(network, address string) (net.Listener, error)
-var _dialTimeout func(network, address string, timeout time.Duration) (net.Conn, error)
-func init(){
-	_listen = BasicQuicService{}.Listen
-	_dialTimeout = BasicQuicService{}.DialTimeout
-
-	//_listen = BasicKcpService{}.Listen
-	//_dialTimeout = BasicKcpService{}.DialTimeout
+func init() {
+	//for idx,v:=range os.Args {
+	//	if v =="-protocol" {
+	//		switch os.Args[idx+1]{
+	//		case "quic":
+	nats.DefalutCustomDialer = BasicQuicService{}
+	_listen = BasicQuicService{}.listen
+	_dial = BasicQuicService{}.dial
+	_customDialer = BasicQuicService{}
+	//			fmt.Println("quic")
+	//		case "kcp":
+	//			nats.DefalutCustomDialer = BasicKcpService{}
+	//			_listen = BasicKcpService{}.Listen
+	//			_dialTimeout = BasicKcpService{}.DialTimeout
+	//			_customDialer = BasicKcpService{}
+	//			fmt.Println("kcp")
+	//		default:
+	//			nats.DefalutCustomDialer = &net.Dialer{}
+	//			_listen = func(network, address string) (net.Listener, error) {
+	//				return natsListenConfig.Listen(context.TODO(), network, address)
+	//			}
+	//			_dialTimeout = net.DialTimeout
+	//			_customDialer = &net.Dialer{}
+	//			fmt.Println("tcp")
+	//		}
+	//		break
+	//	}
+	//}
 }
-
-
 
 // natsListen() is the same as net.Listen() except that TCP keepalives are
 // disabled (to match Go's behavior before Go 1.13).
 func natsListen(network, address string) (net.Listener, error) {
-	return _listen(network,address)
+	return _listen(network, address, nil)
+}
+
+func nastListenTls(network, address string, config *tls.Config) (net.Listener, error) {
+	return _listen(network, address, config)
 }
 
 // natsDialTimeout is the same as net.DialTimeout() except the TCP keepalives
 // are disabled (to match Go's behavior before Go 1.13).
 func natsDialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
-	return _dialTimeout(network,address,timeout)
+	return _dial(network, address, nil, timeout)
 
 }
 
+func natsDialTls(network, address string, tls *tls.Config) (net.Conn, error) {
+	return _dial(network, address, tls, 0)
+}
+
+func natsDialTlsWithTimeout(network, address string, tlsConfig *tls.Config, timeout time.Duration) (net.Conn, error) {
+	return _dial(network, address, tlsConfig, timeout)
+}
 
 func natsDial(network, address string) (net.Conn, error) {
-	return natsDialTimeout(network,address,0)
+	return natsDialTimeout(network, address, 0)
+}
 
+func BasicDial(options *nats.Options) error {
+	options.CustomDialer = _customDialer
+	return nil
 }

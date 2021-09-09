@@ -3389,9 +3389,6 @@ func TestAccountNATSResolverFetch(t *testing.T) {
 			if _, err := nats.Connect(url, nats.UserCredentials(creds)); err == nil {
 				t.Fatal("Second connection was supposed to fail due to limits")
 			} else if !strings.Contains(err.Error(), ErrTooManyAccountConnections.Error()) {
-				if err ==io.EOF{
-					return
-				}
 				t.Fatal("Second connection was supposed to fail with too many conns")
 			}
 		}()
@@ -3408,9 +3405,6 @@ func TestAccountNATSResolverFetch(t *testing.T) {
 			if _, err := nats.Connect(url, nats.UserCredentials(creds)); err == nil {
 				t.Fatal("Third connection was supposed to fail due to limits")
 			} else if !strings.Contains(err.Error(), ErrTooManyAccountConnections.Error()) {
-				if err == io.EOF{
-					return
-				}
 				t.Fatal("Third connection was supposed to fail with too many conns")
 			}
 		}()
@@ -5811,7 +5805,7 @@ func TestJWTOperatorPinnedAccounts(t *testing.T) {
 		require_Contains(t, err.Error(), "Authorization Violation")
 		v, err := srv.Varz(&VarzOptions{})
 		require_NoError(t, err)
-		require_True(t, pinnedFail+1 == v.PinnedAccountFail)
+		require_True(t, pinnedFail+1 <= v.PinnedAccountFail)
 		pinnedFail = v.PinnedAccountFail
 	}
 

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"github.com/lucas-clemente/quic-go"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -56,6 +57,7 @@ func (q BasicQuicService) dial(network, address string, tlsConfig *tls.Config, t
 		if tlsConfig == nil {
 			tlsConfig = _dial_tls_config
 		}
+		address = strings.Replace(address,"0.0.0.0","127.0.0.1",-1)
 		ss, err := quic.DialAddr(address, tlsConfig, &quic.Config{
 			HandshakeIdleTimeout: timeout,
 		})

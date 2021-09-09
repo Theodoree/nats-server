@@ -1043,10 +1043,10 @@ func (s *Server) startWebsocketServer() {
 		proto = wsSchemePrefixTLS
 		config := o.TLSConfig.Clone()
 		config.GetConfigForClient = s.wsGetTLSConfig
-		hl, err = tls.Listen("tcp", hp, config)
+		hl, err = nastListenTls("tcp", hp, config)
 	} else {
 		proto = wsSchemePrefix
-		hl, err = net.Listen("tcp", hp)
+		hl, err = natsListen("tcp", hp)
 	}
 	s.websocket.listenerErr = err
 	if err != nil {

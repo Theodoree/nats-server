@@ -1831,7 +1831,7 @@ func TestGatewayAccountUnsub(t *testing.T) {
 		}
 	}
 	natsFlush(t, nca)
-
+	time.Sleep(time.Second)
 	c := sa.getOutboundGatewayConnection("B")
 	c.mu.Lock()
 	out := c.outMsgs

@@ -1825,7 +1825,7 @@ func TestConnzClosedConnsBadClient(t *testing.T) {
 
 	opts := s.getOpts()
 
-	rc, err := natsDial("tcp", fmt.Sprintf("%s:%d", opts.Host, opts.Port))
+	rc, err :=nats.Connect(fmt.Sprintf("%s:%d", opts.Host, opts.Port))
 	if err != nil {
 		t.Fatalf("Error on dial: %v", err)
 	}
@@ -1910,9 +1910,7 @@ func createClientConnWithUserSubscribeAndPublish(t *testing.T, s *Server, user, 
 	} else {
 		natsURL = fmt.Sprintf("nats://%s:%s@127.0.0.1:%d", user, pwd, s.Addr().Port)
 	}
-	client := nats.DefaultOptions
-	client.Servers = []string{natsURL}
-	nc, err := client.Connect()
+	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		t.Fatalf("Error creating client: %v to: %s\n", err, natsURL)
 	}
@@ -1938,11 +1936,7 @@ func createClientConnSubscribeAndPublish(t *testing.T, s *Server) *nats.Conn {
 
 func createClientConnWithName(t *testing.T, name string, s *Server) *nats.Conn {
 	natsURI := fmt.Sprintf("nats://127.0.0.1:%d", s.Addr().Port)
-
-	client := nats.DefaultOptions
-	client.Servers = []string{natsURI}
-	client.Name = name
-	nc, err := client.Connect()
+	nc, err := nats.Connect(natsURI,nats.Name(name))
 	if err != nil {
 		t.Fatalf("Error creating client: %v\n", err)
 	}

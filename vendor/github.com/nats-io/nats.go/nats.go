@@ -704,6 +704,8 @@ type connectInfo struct {
 // asynchronous subscribers.
 type MsgHandler func(msg *Msg)
 
+var DefalutCustomDialer CustomDialer
+
 // Connect will attempt to connect to the NATS system.
 // The url can contain username/password semantics. e.g. nats://derek:pass@localhost:4222
 // Comma separated arrays are also supported, e.g. urlA, urlB.
@@ -713,6 +715,7 @@ type MsgHandler func(msg *Msg)
 func Connect(url string, options ...Option) (*Conn, error) {
 	opts := GetDefaultOptions()
 	opts.Servers = processUrlString(url)
+	opts.CustomDialer = DefalutCustomDialer
 	for _, opt := range options {
 		if opt != nil {
 			if err := opt(&opts); err != nil {

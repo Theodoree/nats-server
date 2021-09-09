@@ -119,7 +119,7 @@ func TestClosedConnsSubsAccounting(t *testing.T) {
 	nc.Flush()
 	nc.Close()
 
-	checkClosedConns(t, s, 1, 20*time.Millisecond)
+	checkClosedConns(t, s, 1, 200*time.Millisecond)
 	conns := s.closedClients()
 	if lc := len(conns); lc != 1 {
 		t.Fatalf("len(conns) expected to be 1, got %d\n", lc)
